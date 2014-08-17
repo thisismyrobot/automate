@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            canvas {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.1.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='three.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='OrbitControls.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='OBJLoader.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='automate.js') }}"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                automate.loadBuilding('/static/model/model.obj', 12);
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
