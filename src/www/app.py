@@ -3,8 +3,10 @@
 The flask webapp.
 
 """
+import ConfigParser
 import itertools
 import os
+import StringIO
 import time
 
 import flask
@@ -16,6 +18,7 @@ app = Flask(__name__)
 SYSLOG_FILE = '/var/log/messages'
 SYSLOG_FILE = '../testdata.txt' # For testing...
 SYSLOG_FILTER = 'automate-data'
+CONFIG_FILE = '../sensors.ini'
 
 
 def getdata():
@@ -60,6 +63,26 @@ def history(sensorid):
         data.append((int(epoch), float(value)))
 
     return flask.jsonify(history=data)
+
+
+@app.route('/sensors')
+def sensors():
+    """ Returns the info about the sensors.
+    """
+    data = {}
+
+    with open(CONFIG_FILE, 'r') as f:
+        cp = ConfigParser.ConfigParser()
+        cp.readfp(StringIO.StringIO(f.read()))
+        for sensor in cp.sections():
+            data[sensor] = {
+                'id': cp.get(sensor, 'Id'),
+                'x': cp.getfloat(sensor, 'x'),
+                'y': cp.getfloat(sensor, 'y'),
+                'z': cp.getfloat(sensor, 'z'),
+            }
+
+    return flask.jsonify(sensors=data)
 
 
 if __name__ == '__main__':
