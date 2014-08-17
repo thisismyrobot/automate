@@ -14,7 +14,7 @@ from flask import render_template
 
 app = Flask(__name__)
 SYSLOG_FILE = '/var/log/messages'
-SYSLOG_FILE = 'testdata.txt' # For testing...
+SYSLOG_FILE = '../testdata.txt' # For testing...
 SYSLOG_FILTER = 'automate-data'
 
 
