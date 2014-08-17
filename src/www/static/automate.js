@@ -15,19 +15,25 @@
         controls.damping = 0.2;
         controls.addEventListener('change', render);
 
+        var mat_wf_fill = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            opacity: 0.25,
+        });
         var manager = new THREE.LoadingManager();
         var loader = new THREE.OBJLoader(manager);
         loader.load(modelpath, function(modelObj) {
+            building = modelObj;
             modelObj.traverse(function(child) {
                 if (child instanceof THREE.Mesh) {
                     var mesh = new THREE.EdgesHelper(child, 0x00ff00);
                     mesh.material.linewidth = 1;
                     mesh.material.opacity = 0.75;
                     scene.add(mesh);
-                    building = modelObj;
-                    render();
+                    var meshclone = new THREE.Mesh(child.geometry, mat_wf_fill);
+                    scene.add(meshclone);
                 }
             });
+            render();
         });
 
         renderer = new THREE.CanvasRenderer();

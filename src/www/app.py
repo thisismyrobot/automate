@@ -48,7 +48,7 @@ def current():
 
 @app.route('/history/<sensorid>')
 def history(sensorid):
-    """ Returns historical temperature data.
+    """ Returns historical data.
 
         From the syslog file, for a sensor.
     """
