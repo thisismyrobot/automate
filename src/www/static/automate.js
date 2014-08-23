@@ -50,9 +50,24 @@
         renderer.render(scene, camera);
     };
 
+    var sensorTicker = function() {
+		$.get('/current', function(json) {
+			$.each(json.current, function(serial, temp) {
+				// TODO: Update sensor values
+			});
+		});
+		setTimeout(function() {
+		    sensorTicker();
+		}, 15000);
+    };
+
     automate.loadBuilding = function (modelpath, zdepth) {
         init(modelpath, zdepth);
         animate();
     };
+
+	automate.loadTelemetry = function() {
+	    sensorTicker();
+	};
 
 }( window.automate = window.automate || {}, automate));
