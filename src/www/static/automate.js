@@ -1,6 +1,7 @@
 (function(automate) {
 
     var scene, camera, renderer, controls, building, projector;
+    var sensors = {};
 
     var init = function (modelpath, zdepth) {
         scene = new THREE.Scene();
@@ -43,6 +44,7 @@
     };
 
     var animate = function () {
+        placeSensors();
         requestAnimationFrame(animate);
         controls.update();
     };
@@ -52,51 +54,59 @@
     };
 
     var sensorUpdater = function() {
-		$.get('/current', function(json) {
-			$.each(json.current, function(serial, temp) {
-				$('#sensor__' + serial).text(temp);
-			});
-		});
-		setTimeout(function() {
-		    sensorUpdater();
-		}, 15000);
+        $.get('/current', function(json) {
+            $.each(json.current, function(serial, temp) {
+                $('#sensor__' + serial).text(temp);
+            });
+        });
+        setTimeout(function() {
+            sensorUpdater();
+        }, 15000);
     };
 
     // Places 2d div over 3d sensor
     // http://zachberry.com/blog/tracking-3d-objects-in-2d-with-three-js/
-    var sensorPlacer = function(sensors) {
+    var placeSensors = function() {
+        // Find the 2d position of the sensor text on the 3d canvas, move the
+        // sensor text there.
+        var z_pos = {};
         $.each(sensors, function(id, mesh) {
-            var p = mesh.matrixWorld.getPosition().clone();
+            var p = new THREE.Vector3();
+            p.setFromMatrixPosition(mesh.matrixWorld);
             var v = projector.projectVector(p, camera);
             var percX = (v.x + 1) / 2;
             var percY = (-v.y + 1) / 2;
-			var left = percX * window.innerWidth;
-			var top = percY * window.innerHeight;
-			$('#sensor__' + id).css({
-			    left: left + 'px',
-			    top: top + 'px',
-			});
+            var left = percX * window.innerWidth;
+            var top = percY * window.innerHeight;
+            $('#sensor__' + id).css({
+                left: left + 'px',
+                top: top + 'px',
+            });
+            z_pos[id] = p.z;
         });
-        setTimeout(function() {
-            sensorPlacer(sensors);
-        }, 1000);
+        // Set the Z-index to match which sensor(s) are in front of others.
+        var sensor_ids = Object.keys(sensors);
+        sensor_ids.sort(function(a, b) {
+            return z_pos[b] - z_pos[a];
+        });
+        $.each(sensor_ids, function(zindex, id) {
+            $('#sensor__' + id).css('z-index', zindex);
+        });
     };
 
-    var loadSensors = function(sensorsCallback) {
-    	$.get('/sensors', function(json) {
-    	    var sensors = {};
-    	    $.each(json.sensors, function(title, data) {
-    	        $('body').append('<div id="sensor__' + data.id + '">test</div>');
-    	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 1, 1), new THREE.MeshNormalMaterial());
-    	        sphere.position.x = data.x;
-    	        sphere.position.y = data.y;
-    	        sphere.position.z = data.z;
-    	        scene.add(sphere);
-    	        sensors[data.id] = sphere;
-    	    });
-    	    render();
-			sensorsCallback(sensors);
-    	});
+    var loadSensors = function() {
+        $.get('/sensors', function(json) {
+            $.each(json.sensors, function(title, data) {
+                $('body').append('<div id="sensor__' + data.id + '">test</div>');
+                var sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 1, 1), new THREE.MeshNormalMaterial());
+                sphere.position.x = data.x;
+                sphere.position.y = data.y;
+                sphere.position.z = data.z;
+                scene.add(sphere);
+                sensors[data.id] = sphere;
+            });
+            render();
+        });
     };
 
     automate.loadBuilding = function (modelpath, zdepth) {
@@ -104,11 +114,9 @@
         animate();
     };
 
-	automate.loadTelemetry = function() {
-	    loadSensors(function(sensors) {
-	        sensorUpdater();
-	        sensorPlacer(sensors);
-	    });
-	};
+    automate.loadTelemetry = function() {
+        loadSensors();
+        sensorUpdater();
+    };
 
 }( window.automate = window.automate || {}, automate));
