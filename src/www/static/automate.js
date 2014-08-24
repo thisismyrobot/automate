@@ -1,6 +1,6 @@
 (function(automate) {
 
-    var scene, camera, renderer, controls, building;
+    var scene, camera, renderer, controls, building, projector;
 
     var init = function (modelpath, zdepth) {
         scene = new THREE.Scene();
@@ -36,6 +36,7 @@
             render();
         });
 
+        projector = new THREE.Projector();
         renderer = new THREE.CanvasRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
@@ -50,15 +51,52 @@
         renderer.render(scene, camera);
     };
 
-    var sensorTicker = function() {
+    var sensorUpdater = function() {
 		$.get('/current', function(json) {
 			$.each(json.current, function(serial, temp) {
-				// TODO: Update sensor values
+				$('#sensor__' + serial).text(temp);
 			});
 		});
 		setTimeout(function() {
-		    sensorTicker();
+		    sensorUpdater();
 		}, 15000);
+    };
+
+    // Places 2d div over 3d sensor
+    // http://zachberry.com/blog/tracking-3d-objects-in-2d-with-three-js/
+    var sensorPlacer = function(sensors) {
+        $.each(sensors, function(id, mesh) {
+            var p = mesh.matrixWorld.getPosition().clone();
+            var v = projector.projectVector(p, camera);
+            var percX = (v.x + 1) / 2;
+            var percY = (-v.y + 1) / 2;
+			var left = percX * window.innerWidth;
+			var top = percY * window.innerHeight;
+			$('#sensor__' + id).css({
+			    left: left + 'px',
+			    top: top + 'px',
+			});
+        });
+        setTimeout(function() {
+            sensorPlacer(sensors);
+        }, 1000);
+    };
+
+    var loadSensors = function(sensorsCallback) {
+    	$.get('/sensors', function(json) {
+    	    var sensors = {};
+    	    $.each(json.sensors, function(title, data) {
+    	        $('body').append('<div id="sensor__' + data.id + '">test</div>');
+    	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 1, 1), new THREE.MeshNormalMaterial());
+    	        sphere.position.x = data.x;
+    	        sphere.position.y = data.y;
+    	        sphere.position.z = data.z;
+    	        scene.add(sphere);
+    	        sensors[data.id] = sphere;
+    	    });
+    	    render();
+			sensorsCallback(sensors);
+    	});
     };
 
     automate.loadBuilding = function (modelpath, zdepth) {
@@ -67,7 +105,10 @@
     };
 
 	automate.loadTelemetry = function() {
-	    sensorTicker();
+	    loadSensors(function(sensors) {
+	        sensorUpdater();
+	        sensorPlacer(sensors);
+	    });
 	};
 
 }( window.automate = window.automate || {}, automate));
