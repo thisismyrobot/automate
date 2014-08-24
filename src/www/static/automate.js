@@ -56,7 +56,7 @@
     var sensorUpdater = function() {
         $.get('/current', function(json) {
             $.each(json.current, function(serial, temp) {
-                $('#sensor__' + serial).text(temp);
+                $('#sensor__' + serial + ' .val').text(temp);
             });
         });
         setTimeout(function() {
@@ -79,8 +79,8 @@
             var left = percX * window.innerWidth;
             var top = percY * window.innerHeight;
             $('#sensor__' + id).css({
-                left: left + 'px',
-                top: top + 'px',
+                left: Math.floor(left) + 'px',
+                top: Math.floor(top) + 'px',
             });
             z_pos[id] = p.z;
         });
@@ -97,11 +97,17 @@
     var loadSensors = function() {
         $.get('/sensors', function(json) {
             $.each(json.sensors, function(title, data) {
-                $('body').append('<div id="sensor__' + data.id + '">test</div>');
+                $('body').append(
+                    '<div class="sensor" id="sensor__' + data.id + '">' + 
+                    '<div class="dot"></div>' +
+                    '<div class="val">?</div>' +
+                    '</div>'
+                );
                 var sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 1, 1), new THREE.MeshNormalMaterial());
                 sphere.position.x = data.x;
                 sphere.position.y = data.y;
                 sphere.position.z = data.z;
+                sphere.visible = false;
                 scene.add(sphere);
                 sensors[data.id] = sphere;
             });

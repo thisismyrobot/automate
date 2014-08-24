@@ -13,10 +13,27 @@
                 height: 100%;
                 background-color: black;
             }
-            div {
-                background-color:silver;
-                color: blue;
-                position:absolute;
+            div.sensor {
+                color: white;
+                position: absolute;
+                font-weight: bold;
+                text-shadow: 0 0 5px black;
+                border: 1px solid rgba(0, 255, 0, 0.5);
+                border-top-right-radius: 7px;
+                border-bottom-right-radius: 7px;
+                border-bottom-left-radius: 7px;
+                background-color: rgba(0, 0, 0, 0.5);
+                font-size: 11px;
+                padding: 3px;
+                font-family: Arial;
+            }
+            div.dot {
+                position: absolute;
+                width: 2px;
+                height: 2px;
+                background-color: red;
+                left: -1px;
+                top: -1px;
             }
         </style>
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.1.min.js') }}"></script>
